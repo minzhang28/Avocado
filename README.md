@@ -1,8 +1,8 @@
 # Avocado
-This is a project to simply and secure the way to generate client token from Vault
+This is a project to simple and secure the way to generate client token from Vault
 
 ## Problem to solve
-[Vault](https://www.vaultproject.io/) is a powerful service to manage and control secrets. In order to use Vault to generate new secrets or reading existing secrets from Vault, user has to have a token, which can be a risk of security. Avocado is to solve this chicken-and-egg problem.
+[Vault](https://www.vaultproject.io/) is a powerful service to manage and control secrets. In order to use Vault to generate new secrets or reading existing secrets, user has to have a token, which can be a risk of security. Avocado is to solve this chicken-and-egg problem.
 
 ## Use Cases
 - Avocado is to help OPS generate a Vault token without knowing the existing one. By simply providing some metadata, the new Vault token is generated.
@@ -17,9 +17,9 @@ This is a project to simply and secure the way to generate client token from Vau
 
 ## Consul EC2 metadata
 In order to proceed the instance check between Avocado and Consul, Consul must have following setups done:
-- Key naming convention:  `project_name + "/" + project_env`. This is pretty standard `KEY` pattern for Consul. For example, if the K/V pair belongs to `PRODUCTION` environment of project `DEMO`, then the keys should be created under `DEMO/PRODUCTION`. Avocado is following this pattern to automatically generate request URL.
+- Naming convention:  `project_name + "/" + project_env`. This is pretty standard `KEY` pattern for Consul. For example, if the K/V pair belongs to `PRODUCTION` environment of project `DEMO`, then the keys should be `DEMO/PRODUCTION`. Avocado is following this pattern to automatically generate request URL.
 
-- Value template: To proceed the instance check, the JSON template below needs to be saved as `Value` paired with the `Key` mentioned above:
+- Metadata: To proceed the instance check, the JSON below needs to be saved as `Value` paired with the `Key` mentioned above:
 ```
 {
   "project": "demo",
