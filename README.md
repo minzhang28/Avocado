@@ -11,9 +11,11 @@ This is a project to simple and secure the way to generate client token from Vau
 ## How it works
 ![alt text](https://raw.githubusercontent.com/minzhang28/Avocado/master/Avocado.png)
 
-- Token requester send `POST` request to Avocado, with some EC2 metadata
-- Avocado checks if this EC2 is already in the list of instances, if true, it's ignoring the request, otherwise, appending the metadata of token requester to the instance list
-- If instance check is passed, Avocado calls Vault http `APP ID` auth backend API to create new `user-id` and map to existing `app-id`, then generate token based on pre-defined policy and return to token requester.
+1. Token requester send `POST` request to Avocado with it's [EC2 identity document](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html) and the PKCS7 Signature
+2. Avocado verifies the EC2 PKCS7 signature to make sure the token requester is from trusted source
+3. Avocado checks if this EC2 is already in the list of instances, if true, ignores the request, otherwise, adds the metadata of token requester to the instance list
+4. If both step #2 and #3 passed, Avocado calls Vault http `APP ID` auth backend API to create new `user-id` and map to existing `app-id`, then generate token based on pre-defined policy and return to token requester.
+5. Since there's no lease period for the `APP ID` token, thus there's no need to renew
 
 ## Consul EC2 metadata
 In order to proceed the instance check between Avocado and Consul, Consul must have following setups done:
@@ -27,14 +29,25 @@ In order to proceed the instance check between Avocado and Consul, Consul must h
   "app_id": "demo_production", # Optional, if not available, Avocado uses "project_environment" as app_id and create mapping on Vault.
   "instances":                 # Optional, Avocado checks if EC2 Mac address is registered before to avoid duplicate
     [
-      {
-        "instance_id": "i-abcdefe",
-        "mac_addr": "1q2w3e4r1"
-      },
-      {
-        "instance_id": "i-abcdef2",
-        "mac_addr": "1q2w3e4r2"
-      }
+        {
+          "devpayProductCodes": null,
+          "availabilityZone": "us-west-00",
+          "instanceId": "i-abcdefg",
+          "region": "us-west-00",
+          "privateIp": "172.0.0.0",
+          "version": "2010-08-31",
+          "architecture": "x86_64",
+          "billingProducts": null,
+          "kernelId": null,
+          "ramdiskId": null,
+          "imageId": "ami-123456",
+          "instanceType": "t2.medium",
+          "pendingTime": "2015-09-30T05:08:29Z",
+          "accountId": "1234567890"
+        },
+        {
+         ...
+        }          
     ]
 }
 ```
@@ -45,14 +58,34 @@ In order to proceed the instance check between Avocado and Consul, Consul must h
 
 ## API
 
-## `/register`
+## `/register-ec2`
 **METHOD: POST**
-
+**REQUEST HEADER: `Content-Type:application/json`**
 **PARAMETERS: All mandatory**
-- `instance_id`: String of the EC2 instance id, e.g: `i-abcdef2`
 - `project_id`: String of the project name, e.g: `demo`
-- `mac_addr`: String of the mac_addr of token requester, e.g: `1q2we3r4`
 - `project_env`: String of the project running envionment, e.g: `production`, `dev`, `qa`
+- `pkcs7_sig` : String of the PKCS7 Signature.
+> Note that the value of `pkcs7_sig` MAY need to be encoded to be used as URL parameter if it contains characters like `+`
+
+**BODY: The identity document JSON**
+```
+{
+          "devpayProductCodes": null,
+          "availabilityZone": "us-west-00",
+          "instanceId": "i-abcdefg",
+          "region": "us-west-00",
+          "privateIp": "172.0.0.0",
+          "version": "2010-08-31",
+          "architecture": "x86_64",
+          "billingProducts": null,
+          "kernelId": null,
+          "ramdiskId": null,
+          "imageId": "ami-123456",
+          "instanceType": "t2.medium",
+          "pendingTime": "2015-09-30T05:08:29Z",
+          "accountId": "1234567890"
+        }
+```
 
 
 **RESPONSE**
@@ -82,4 +115,23 @@ Avocado requires following variables to run
 ```bash
 curl localhost:5000/Health
 {"status": "OK"}
+```
+
+## Request example
+```bash
+curl -X POST -d "$doc" \
+    --header "Content-Type:application/json"  \
+    "http://localhost:5000/register-ec2?project_id=demo&project_env=production&pkcs7_sig=$encode_key"
+```
+> Success resposne
+```javascript
+{"token": "284a477e-cd93-554b-b0b4-69c5ac24cc82"}
+```
+> Signature Verification Failure response
+```javascript
+{"error": "Invalid signature"}
+```
+> Registration Failure response
+```javascript
+{"message": "Your registration is failed due to duplication. Please double check your registration info is unique"}
 ```

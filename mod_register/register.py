@@ -9,13 +9,14 @@ def is_valid(url_parameter):
         return False
 
 
-def register_on_consul(project_name, project_env, instance_id, mac_address):
+def register(pkcs7_sig, aws_identity_document, project_name, project_env):
     req_endpoint = config.CONSUL_HOST + config.CONSUL_KV_ENDPOINT + "/" + project_name + "/" + project_env
-    register_info = dict(instance_id=instance_id, mac_addr=mac_address)
+
+    register_info = dict(json.loads(aws_identity_document))
 
     failure_response = dict(
-        message="Your registration is failed due to duplication. Please double check your registration info is unique")
-    consul_check_failure_response = dict(message="No key value pair available on consul path:" + req_endpoint)
+            message="Your registration is failed due to duplication. Please double check your registration info is unique")
+    consul_check_failure_response = dict(message="No value available on consul path:" + req_endpoint)
 
     try:
         response = requests.get(req_endpoint)
@@ -42,7 +43,7 @@ def register_on_consul(project_name, project_env, instance_id, mac_address):
                     # if the instance mac address is registered already, do nothing
                     else:
                         for i in project_instances:
-                            if dict(i)["mac_addr"] == mac_address:
+                            if dict(i)["instanceId"] == register_info["instanceId"]:
                                 return json.dumps(failure_response)
                                 break
                     # update project policy if the instance is not registered before
@@ -50,12 +51,12 @@ def register_on_consul(project_name, project_env, instance_id, mac_address):
                     project_policy["instances"] = project_instances
 
                     _update_policy_to_consul(req_endpoint, project_policy)
-                    return json.dumps(generate_app_id_token(vault_policy_name, project_policy["app_id"], instance_id))
+                    return json.dumps(generate_app_id_token(vault_policy_name, project_policy["app_id"], register_info["instanceId"]))
             else:
                 project_policy["instances"] = []
                 project_policy["instances"].append(register_info)
                 _update_policy_to_consul(req_endpoint, project_policy)
-                return json.dumps(generate_app_id_token(vault_policy_name, project_policy["app_id"], instance_id))
+                return json.dumps(generate_app_id_token(vault_policy_name, project_policy["app_id"], register_info["instanceId"]))
         else:
             return json.dumps(consul_check_failure_response)
 
@@ -89,6 +90,7 @@ def generate_app_id_token(policy_name, app_id, user_id):
     token_req_body = dict(app_id=app_id, user_id=user_id)
     response = requests.post(token_req_url, json.dumps(token_req_body), headers=headers)
     return dict(token=dict(response.json())["auth"]["client_token"])
+
 
 def _update_policy_to_consul(req_endpoint, project_policy):
     requests.put(req_endpoint, json.dumps(project_policy))

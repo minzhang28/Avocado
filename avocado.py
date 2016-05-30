@@ -1,30 +1,35 @@
 from flask import Flask, request, jsonify, json
 from mod_register import register
+from mod_register import authenticator
 from logging.handlers import RotatingFileHandler
 import logging
 
 app = Flask(__name__)
 
 
-@app.route('/register', methods=['POST'])
-def register():
+@app.route('/register-ec2', methods=['POST'])
+def register_ec2():
     try:
+        pkcs7_sig = request.args.get("pkcs7_sig")
+        aws_identity_document = request.data
         project_id = request.args.get("project_id")
         project_env = request.args.get("project_env")
-        instance_id = request.args.get("instance_id")
-        mac_addr = request.args.get("mac_addr")
 
-        if register.is_valid(project_id) and register.is_valid(instance_id) and register.is_valid(mac_addr) and register.is_valid(project_env):
-            return register.register_on_consul(project_id, project_env, instance_id, mac_addr)
+        if register.is_valid(project_id) and register.is_valid(pkcs7_sig) and register.is_valid(aws_identity_document) and register.is_valid(project_env):
+            if authenticator.verify_pkcs7(pkcs7_sig, aws_identity_document):
+                return register.register(pkcs7_sig, aws_identity_document, project_id, project_env)
+            else:
+                return ValueError("Invalid signature")
         else:
-            raise ValueError("You need to have project_id, instance_id and mac_addr to register")
+            raise ValueError("You need to have project_id, project_env, pkcs7_signature and EC2 identity document to register")
 
-    except ValueError as e:
+    except Exception as e:
         return jsonify(
             {
                 "error": e.message
             }
         )
+
 
 @app.route('/health', methods=['GET'])
 def health():
