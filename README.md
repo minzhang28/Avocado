@@ -1,19 +1,21 @@
 # Avocado
-This is a project to simple and secure the way to generate client token from Vault
+This is a project to generate Vault token againest Vault APP-ID backend based on AWS EC2 Identity Document.
 
 ## Problem to solve
 [Vault](https://www.vaultproject.io/) is a powerful service to manage and control secrets. In order to use Vault to generate new secrets or reading existing secrets, user has to have a token, which can be a risk of security. Avocado is to solve this chicken-and-egg problem.
 
 ## Use Cases
-- Avocado is to help OPS generate a Vault token without knowing the existing one. By simply providing some metadata, the new Vault token is generated.
-- Avocado is supposed to be running on a secure environment where only limited people has access, just like Vault
+- Auto generate Vault token with specified Vault policy without knowing any existing Vault token
+- Protect token request replays. Token only generated once from the same EC2, repeatable requests are ignored
+- Easier `app-id` and `user-id` management than using Vault command line. Avocado saves project metadata (Vault policy, app-id, instance list, etc) in a consul K/V pair.
+> Avocado is supposed to be running on a secure environment where only limited people has access
 
 ## How it works
 ![alt text](https://raw.githubusercontent.com/minzhang28/Avocado/master/Avocado.png)
 
 1. Token requester send `POST` request to Avocado with it's [EC2 identity document](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html) and the PKCS7 Signature
 2. Avocado verifies the EC2 PKCS7 signature to make sure the token requester is from trusted source
-3. Avocado checks if this EC2 is already in the list of instances, if true, ignores the request, otherwise, adds the metadata of token requester to the instance list
+3. Avocado checks if this EC2 is already in the list of instances on Consul K/V pairs, if true, ignores the request, otherwise, adds the metadata of token requester to the instance list
 4. If both step #2 and #3 passed, Avocado calls Vault http `APP ID` auth backend API to create new `user-id` and map to existing `app-id`, then generate token based on pre-defined policy and return to token requester.
 5. Since there's no lease period for the `APP ID` token, thus there's no need to renew
 
