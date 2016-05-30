@@ -62,7 +62,9 @@ In order to proceed the instance check between Avocado and Consul, Consul must h
 
 ## `/register-ec2`
 **METHOD: POST**
+
 **REQUEST HEADER: `Content-Type:application/json`**
+
 **PARAMETERS: All mandatory**
 - `project_id`: String of the project name, e.g: `demo`
 - `project_env`: String of the project running envionment, e.g: `production`, `dev`, `qa`
@@ -70,28 +72,28 @@ In order to proceed the instance check between Avocado and Consul, Consul must h
 > Note that the value of `pkcs7_sig` MAY need to be encoded to be used as URL parameter if it contains characters like `+`
 
 **BODY: The identity document JSON**
-```
+```javascript
 {
-          "devpayProductCodes": null,
-          "availabilityZone": "us-west-00",
-          "instanceId": "i-abcdefg",
-          "region": "us-west-00",
-          "privateIp": "172.0.0.0",
-          "version": "2010-08-31",
-          "architecture": "x86_64",
-          "billingProducts": null,
-          "kernelId": null,
-          "ramdiskId": null,
-          "imageId": "ami-123456",
-          "instanceType": "t2.medium",
-          "pendingTime": "2015-09-30T05:08:29Z",
-          "accountId": "1234567890"
-        }
+    "devpayProductCodes": null,
+    "availabilityZone": "us-west-00",
+    "instanceId": "i-abcdefg",
+    "region": "us-west-00",
+    "privateIp": "172.0.0.0",
+    "version": "2010-08-31",
+    "architecture": "x86_64",
+    "billingProducts": null,
+    "kernelId": null,
+    "ramdiskId": null,
+    "imageId": "ami-123456",
+    "instanceType": "t2.medium",
+    "pendingTime": "2015-09-30T05:08:29Z",
+    "accountId": "1234567890"
+}
 ```
 
 
 **RESPONSE**
-```
+```javascript
 {"token": "284a477e-cd93-554b-b0b4-69c5ac24cc82"}
 ```
 
@@ -121,7 +123,7 @@ curl localhost:5000/Health
 
 ## Request example
 ```bash
-curl -X POST -d "$doc" \
+curl -X POST -d "$EC2_Identity_DOC_JSON" \
     --header "Content-Type:application/json"  \
     "http://localhost:5000/register-ec2?project_id=demo&project_env=production&pkcs7_sig=$encode_key"
 ```
