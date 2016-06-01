@@ -127,7 +127,7 @@ curl -X POST -d "$EC2_Identity_DOC_JSON" \
     --header "Content-Type:application/json"  \
     "http://localhost:5000/register-ec2?project_id=demo&project_env=production&pkcs7_sig=$encode_key"
 ```
-> Success resposne
+> Success response
 ```javascript
 {"token": "284a477e-cd93-554b-b0b4-69c5ac24cc82"}
 ```
@@ -139,3 +139,7 @@ curl -X POST -d "$EC2_Identity_DOC_JSON" \
 ```javascript
 {"message": "Your registration is failed due to duplication. Please double check your registration info is unique"}
 ```
+## License
+
+Licensed under [MIT](https://github.com/minzhang28/Avocado/blob/master/LICENSE.md).
+Copyright by [Min Zhang](https://github.com/minzhang28).
