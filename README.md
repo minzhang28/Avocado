@@ -143,3 +143,4 @@ curl -X POST -d "$EC2_Identity_DOC_JSON" \
 
 Licensed under [MIT](https://github.com/minzhang28/Avocado/blob/master/LICENSE.md).
 Copyright by [Min Zhang](https://github.com/minzhang28).
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/minzhang28/avocado/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
