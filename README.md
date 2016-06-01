@@ -112,7 +112,7 @@ Avocado requires following variables to run
 
 - In order to run the application, we'll start it with the built-in server:
 ```bash
-./python avocado.py &
+python avocado.py &
 ```
 
 ## Run in docker
