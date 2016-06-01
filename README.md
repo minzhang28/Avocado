@@ -115,6 +115,18 @@ Avocado requires following variables to run
 ./python avocado.py &
 ```
 
+## Run in docker
+```bash
+docker pull minzhang/avocado
+docker run -d -p 5000:5000 \
+-e VAULT_HOST=$VAULT_HOST \
+-e VAULT_TOKEN=$VALUT_TOKEN \
+-e CONSUL_HOST=$CONSUL_HOST \
+--name avocado \
+minzhang/avocado
+```
+
+
 ## Health check
 ```bash
 curl localhost:5000/Health
@@ -139,8 +151,10 @@ curl -X POST -d "$EC2_Identity_DOC_JSON" \
 ```javascript
 {"message": "Your registration is failed due to duplication. Please double check your registration info is unique"}
 ```
+
 ## License
 
 Licensed under [MIT](https://github.com/minzhang28/Avocado/blob/master/LICENSE.md).
 Copyright by [Min Zhang](https://github.com/minzhang28).
+
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/minzhang28/avocado/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
